@@ -6,6 +6,17 @@ from rest_framework_simplejwt.views import TokenRefreshView
 
 urlpatterns = [
     path('category/', CategoryListView.as_view()),
+    path('categories/create/', CategoryCreateAPIView.as_view()),
+    path('categories/delete/<int:id>/', CategoryDeleteApiView.as_view()),
+    path('categories/edit/<int:id>/',CategoryEditApiView.as_view()),
     
+    path('product/', ProductListView.as_view()),
+    path('product/create/', ProductCreateAPIView.as_view()),
+    path('product/delete/<int:id>/', ProductDeleteApiView.as_view()),
+    path('product/edit/<int:id>/',ProductEditApiView.as_view()),
     
+    path('services/', ServiceListView.as_view()),
+    path('services/create/', ServiceCreateAPIView.as_view()),
+    path('services/delete/<int:id>/', ServiceDeleteApiView.as_view()),
+    path('services/edit/<int:id>/',ServiceEditApiView.as_view()),
 ]
