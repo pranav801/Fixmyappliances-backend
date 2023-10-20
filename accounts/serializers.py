@@ -1,6 +1,6 @@
 import re
 from rest_framework import serializers
-from . models import User
+from . models import User,Address
 from rest_framework.validators import ValidationError
 from django.forms.models import model_to_dict
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
@@ -52,3 +52,8 @@ class MyTokenObtainPairSerializer(TokenObtainPairSerializer):
         return token
 
 
+
+class AddressSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Address
+        fields = '__all__'

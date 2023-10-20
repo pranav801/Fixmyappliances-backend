@@ -38,7 +38,7 @@ class User(AbstractBaseUser):
 
     ROLE_CHOICES = (
         ('user', 'user'),
-        ('counselor', 'counselor'),
+        ('employee', 'employee'),
         ('admin', 'admin')
     )
 
@@ -70,3 +70,16 @@ class User(AbstractBaseUser):
 
     def has_module_perms(self, add_label):
         return True
+    
+
+class Address(models.Model):
+    user = models.ForeignKey(User, models.CASCADE)
+    fullname = models.CharField(max_length=25)
+    phone = models.PositiveIntegerField()
+    pincode = models.PositiveIntegerField()
+    house_name = models.CharField(max_length=50)
+    street = models.CharField(max_length=50)
+    landmark = models.CharField(max_length=50)
+    city = models.CharField(max_length=50)
+    state = models.CharField(max_length=50)
+

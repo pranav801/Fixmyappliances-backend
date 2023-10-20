@@ -32,6 +32,7 @@ class Service(models.Model):
     service_product = models.ForeignKey(Products,models.CASCADE)
     service_des = models.CharField(max_length=255)
     service_img = models.ImageField(upload_to='services')
+    service_charge = models.PositiveIntegerField(null=True)
 
     class Meta:
         verbose_name_plural = "Services"

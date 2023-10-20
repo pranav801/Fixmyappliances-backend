@@ -1,3 +1,5 @@
+from rest_framework.generics import RetrieveUpdateAPIView
+from rest_framework import status
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.decorators import api_view
@@ -9,7 +11,12 @@ from django.utils.encoding import force_bytes
 from django.contrib.auth.tokens import default_token_generator
 from django.core.mail import EmailMessage
 from django.shortcuts import HttpResponseRedirect
-from .serializers import EmployeeRegisterSerializer
+from .serializers import EmployeeRegisterSerializer, ProfileCompletionSerializer, BaseProfileSerializer, EmployeeSerializer,EmployeeLoginSerializer
+from rest_framework.generics import CreateAPIView,UpdateAPIView, ListAPIView
+from .models import Employee
+from rest_framework.permissions import IsAuthenticated
+from django.contrib.auth import authenticate, login
+from rest_framework_simplejwt.tokens import RefreshToken
 
 class EmployeeRegistrationView(APIView):
     def post(self, request):
@@ -20,7 +27,11 @@ class EmployeeRegistrationView(APIView):
         if serializer.is_valid(raise_exception=True):
 
             user = serializer.save()
+            user.role = 'employee'
+            user.is_staff = True
             user.save()
+            Employee.objects.create(employee=user)
+
 
             current_site = get_current_site(request)
             mail_subject = 'Please activate your account'
@@ -29,7 +40,7 @@ class EmployeeRegistrationView(APIView):
                 'domain': current_site,
                 'uid': urlsafe_base64_encode(force_bytes(user.pk)),
                 'token': default_token_generator.make_token(user),
-                'cite' : current_site
+                'cite': current_site
             })
             to_email = email
             send_email = EmailMessage(mail_subject, message, to=[to_email])
@@ -37,7 +48,7 @@ class EmployeeRegistrationView(APIView):
 
             return Response({'status': 'success', 'msg': 'A verificaiton link sent to your registered email address', "data": serializer.data})
         else:
-            return Response({'status': 'error', 'msg': serializer.errors})
+            return Response({'status': 'error', 'msg': serializer.errors}, status=400)
 
 
 @api_view(['GET'])
@@ -52,10 +63,53 @@ def activate(request, uidb64, token):
         user.is_active = True
         user.save()
         message = 'Congrats! Account activated!'
-        redirect_url = 'http://localhost:5173/employee/home/' + '?message=' + message
+        redirect_url = 'http://localhost:5173/employee/form/' + \
+            '?emp=' + str(user.id)
     else:
         message = 'Invalid activation link'
-        redirect_url = 'http://localhost:5173/employee/home/' + '?message=' + message
+        redirect_url = 'http://localhost:5173/employee/form/' + \
+            '?emp=' + str(user.id)
 
     return HttpResponseRedirect(redirect_url)
 
+
+class UpdateProfile(UpdateAPIView):
+    lookup_field = 'id'
+    queryset = User.objects.filter(role='employee')
+    serializer_class = BaseProfileSerializer
+
+
+class ProfileCompletionView(UpdateAPIView):
+    lookup_field = 'employee__id'
+    queryset = Employee.objects.all()
+    serializer_class = ProfileCompletionSerializer
+   
+class EmployeeDetailView(ListAPIView):
+    lookup_field = 'employee__id'
+    queryset = Employee.objects.all()
+    serializer_class = EmployeeSerializer
+
+
+class EmployeeSignIn(APIView):
+
+    def post(self, request):
+        email = request.data.get('email')
+        password = request.data.get('password')
+        user = authenticate(request, email=email, password=password)
+      
+        if user and user.role == 'employee':
+            login(request, user)
+
+            # Generate a JWT token for the user
+            refresh = RefreshToken.for_user(user)
+            data = {
+                'access_token': str(refresh.access_token),
+                'refresh_token': str(refresh)
+            }
+
+            return Response(data)
+        else:
+            return Response({'detail': 'Invalid credentials or insufficient permissions'}, status=status.HTTP_401_UNAUTHORIZED)
+        
+
+        

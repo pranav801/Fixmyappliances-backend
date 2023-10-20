@@ -19,4 +19,13 @@ urlpatterns = [
     path('services/create/', ServiceCreateAPIView.as_view()),
     path('services/delete/<int:id>/', ServiceDeleteApiView.as_view()),
     path('services/edit/<int:id>/',ServiceEditApiView.as_view()),
+
+    path('services/list/', ServiceViewSet.as_view()),
+
+    path('product/listing/<int:category_id>/',ProductListing.as_view()),
+
+    path('product/products/<str:categoryName>/' ,ProductsByCategory.as_view()),
+    path('product/detail/<str:productName>/', ServiceByProduct.as_view()),
 ]
+
+

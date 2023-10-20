@@ -6,10 +6,15 @@ from rest_framework.response import Response
 from rest_framework import status
 from accounts.token import create_jwt_pair_tokens
 from accounts.models import User
+from employee.models import Employee,employee_request_signal
 from .serializers import UserSerializer
+from employee.serializers import EmployeeSerializer
 from rest_framework.filters import SearchFilter
+from rest_framework.decorators import api_view,action
+from .utils import send_employee_status_email
+from .helpers import generate_random_password
 
-class AdminLogin(APIView):
+class AdminLogin(APIView): 
     def post(self, request):
         email = request.data.get('email')
         password = request.data.get('password')
@@ -62,3 +67,39 @@ class AdminSearchUser(ListCreateAPIView):
      search_fields = ['first_name', 'last_name', 'email','phone']  
 
 
+class EmployeeRequestList(APIView):
+    serializer_class = EmployeeSerializer
+
+    def get(self, request):
+        queryset = Employee.objects.filter(isRequested=True)
+        serializer = self.serializer_class(queryset, many=True)
+        return Response(serializer.data)
+    
+    def patch(self, request, pk, action):
+        employee = Employee.objects.get(pk=pk)
+
+        if action=='accept':
+            employee.isVerified = True
+            message = 'Accepted'
+            password = generate_random_password()
+            temp_password = password
+            employee.employee.set_password(password)
+            employee.employee.save()
+        elif action=='reject':
+            employee.isVerified = False
+            message = 'Rejected'
+            temp_password = 'False'
+        employee.save()
+
+        # send_employee_status_email(employee, message, action,temp_password)
+        employee_request_signal.send(sender=Employee, instance=employee, created=False, temp_password=temp_password)
+        
+        return Response({'message': message}, status=status.HTTP_200_OK)
+
+
+
+class AdminSearchEmployeeReq(ListCreateAPIView):
+    serializer_class = EmployeeSerializer
+    filter_backends = [SearchFilter]
+    queryset = Employee.objects.all()
+    search_fields = ['employee__first_name','employee__last_name','employee__email','employee__phone','category__category_name','pincode']

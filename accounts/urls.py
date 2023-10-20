@@ -17,6 +17,11 @@ urlpatterns = [
     path('token/', MyTokenObtainPairView.as_view(), name='token_obtain_pair'),
     path('token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
     path('google_authentication/', GoogleAuthentication.as_view()),
+    path('update/<int:id>',UpdateUser.as_view()),
 
-    
+    path('address/', AddressFill.as_view()),
+    path('address/select/<int:user>', AddressSeclect.as_view()),
+
 ]
+
+

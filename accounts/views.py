@@ -1,9 +1,10 @@
 from rest_framework.views import APIView
+from rest_framework.generics import CreateAPIView,ListAPIView
 from rest_framework.response import Response
 from rest_framework.decorators import api_view
 from rest_framework import status
-from .models import User
-from .serializers import UserRegisterSerializer, GoogleAuthSerializer, MyTokenObtainPairSerializer
+from .models import User,Address
+from .serializers import UserRegisterSerializer, GoogleAuthSerializer, MyTokenObtainPairSerializer,AddressSerializer
 from .token import create_jwt_pair_tokens
 from django.contrib.sites.shortcuts import get_current_site
 from django.template.loader import render_to_string
@@ -162,3 +163,21 @@ class ResetPassword(APIView):
             return Response({'msg': 'Password reset succesfully'})
 
         return HttpResponseRedirect('http://localhost:5173/login/')
+
+from rest_framework.generics import RetrieveUpdateAPIView
+
+class UpdateUser(RetrieveUpdateAPIView):
+    queryset = User.objects.all()
+    lookup_field = 'id'
+    serializer_class = UserRegisterSerializer
+
+
+class AddressFill(CreateAPIView):
+    queryset = Address.objects.all()
+    serializer_class = AddressSerializer
+
+class AddressSeclect(ListAPIView):
+    queryset = Address.objects.all()
+    lookup_field = 'user'
+    serializer_class = AddressSerializer
+    

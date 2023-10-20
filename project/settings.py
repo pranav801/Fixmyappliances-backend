@@ -15,6 +15,10 @@ from pathlib import Path
 from decouple import config
 from datetime import timedelta
 
+from dotenv import load_dotenv
+
+load_dotenv()  # take environment variables from .env.
+
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -49,6 +53,7 @@ INSTALLED_APPS = [
     'superuser',
     'employee',
     'service',
+    'booking',
     
 ]
 
@@ -208,3 +213,9 @@ EMAIL_PORT = config('port')
 EMAIL_HOST_USER = config('user')
 EMAIL_HOST_PASSWORD = config('password')
 EMAIL_USE_TLS = config('tls')
+
+
+STRIPE_SECRET_KEY = config('stripe_secret_key')
+
+SITE_URL = config('BaseUrl')
+
