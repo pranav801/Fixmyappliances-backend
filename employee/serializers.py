@@ -44,3 +44,4 @@ class EmployeeLoginSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
         fields = ('email', 'password')
+

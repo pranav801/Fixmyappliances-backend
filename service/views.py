@@ -69,7 +69,7 @@ class ServiceEditApiView(UpdateAPIView):
 
 class ServiceViewSet(ListCreateAPIView):
     queryset = Service.objects.all()
-    serializer_class = ServiceSerializer
+    serializer_class = ServiceListSerializer
 
     
 class ProductListing(APIView):

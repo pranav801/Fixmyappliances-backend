@@ -20,7 +20,9 @@ urlpatterns = [
     path('update/<int:id>',UpdateUser.as_view()),
 
     path('address/', AddressFill.as_view()),
-    path('address/select/<int:user>', AddressSeclect.as_view()),
+    path('address/select/<int:user_id>', AddressSeclect.as_view()),
+
+    path('userlist/<int:id>/', UserList.as_view()),
 
 ]
 

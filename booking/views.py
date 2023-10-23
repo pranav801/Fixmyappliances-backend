@@ -1,11 +1,11 @@
 from django.shortcuts import redirect, render
-from rest_framework.generics import ListAPIView,CreateAPIView
+from rest_framework.generics import ListAPIView,CreateAPIView, RetrieveAPIView
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
 from .models import Booking
 from employee.models import Employee
-from .serializer import BookingSerializer
+from .serializer import BookingSerializer,BookingListSerializer,BookingsSerializer
 from employee.serializers import EmployeeSerializer
 from rest_framework.decorators import api_view
 from accounts.models import Address
@@ -106,3 +106,86 @@ class PaymentSuccess(APIView):
         except Booking.DoesNotExist:
             return Response(data={'message' : 'Booking not found'}, status=status.HTTP_404_NOT_FOUND)
         
+
+class BookingsList(ListAPIView):
+    serializer_class = BookingsSerializer
+
+    def get_queryset(self):
+        userid = self.kwargs['userid']  
+        return Booking.objects.filter(user=userid)
+    
+
+class LastPendingBookingView(RetrieveAPIView):
+    serializer_class = BookingListSerializer
+
+    def get(self, request, user_id):
+        
+        booking = Booking.objects.filter(user_id=user_id, status='pending').last()
+
+        if booking is not None:
+            serializer = self.serializer_class(booking)
+            return Response(serializer.data)
+        
+        else:
+            return Response({'message': 'No pending booking found for this user.'}, status=status.HTTP_404_NOT_FOUND)
+
+
+        
+class UserWithEmployeeByBookingId(APIView):
+    def get(self, request, BookingId):
+        try:
+            booking = Booking.objects.get(id=BookingId)
+            user = booking.employee.employee
+            return Response(data={'name':user.first_name,'email':user.email})
+        except Booking.DoesNotExist:
+            return Response({'error': 'Booking not found'}, status=status.HTTP_404_NOT_FOUND)
+        
+
+class BookingListEmployee(ListAPIView):
+    serializer_class = BookingsSerializer
+
+    def get_queryset(self):
+        empid = self.kwargs['empid']  
+        return Booking.objects.filter(employee=empid) 
+
+
+class BookingStatusUpdate(APIView):
+    def patch(self, request, booking_id):
+        try:
+            booking = Booking.objects.get(id=booking_id)
+        except Booking.DoesNotExist:
+            return Response(status=status.HTTP_404_NOT_FOUND)
+
+        new_status = request.data.get('status', None)
+
+        if new_status is None or new_status not in dict(Booking.ROLE_CHOICES):
+            return Response({'error': 'Invalid status'}, status=status.HTTP_400_BAD_REQUEST)
+
+        booking.status = new_status
+        booking.save()
+
+        serializer = BookingListSerializer(booking)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+    
+
+
+class UpdateServiceDateAndTime(APIView):
+    def patch(self, request, booking_id):
+        try:
+            booking = Booking.objects.get(id=booking_id)
+        except Booking.DoesNotExist:
+            return Response(status=status.HTTP_404_NOT_FOUND)
+
+        service_date = request.data.get('service_date')
+        service_time = request.data.get('service_time')
+
+        if service_date is not None:
+            booking.service_date = service_date
+
+        if service_time is not None:
+            booking.service_time = service_time
+
+        booking.save()
+
+        serializer = BookingListSerializer(booking)
+        return Response(serializer.data, status=status.HTTP_200_OK)

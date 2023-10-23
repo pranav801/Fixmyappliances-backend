@@ -6,7 +6,15 @@ from service.models import Products, Service
 
 
 class Booking(models.Model):
-    booking_id = models.UUIDField(null=True)
+    ROLE_CHOICES = (
+        ('pending', 'pending'),
+        ('confirmed', 'confirmed'),
+        ('completed', 'completed'),
+        ('cancelled', 'cancelled'),
+
+    )
+
+    booking_id = models.UUIDField(null=True, unique=True)
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     address = models.ForeignKey(Address, on_delete=models.CASCADE)
     employee = models.ForeignKey(Employee, on_delete=models.CASCADE)
@@ -15,6 +23,7 @@ class Booking(models.Model):
     booking_amount = models.PositiveIntegerField()
     date_of_booking = models.DateField(auto_now_add=True)
     time_of_booking = models.TimeField(auto_now_add=True)
+    service_date = models.DateField(null=True)
+    service_time = models.TimeField(null=True)
     is_paid = models.BooleanField(default=False)
-    is_confirmed = models.BooleanField(default=False)
-    
+    status = models.CharField(max_length=50, default='pending', choices=ROLE_CHOICES)

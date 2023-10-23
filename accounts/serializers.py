@@ -57,3 +57,8 @@ class AddressSerializer(serializers.ModelSerializer):
     class Meta:
         model = Address
         fields = '__all__'
+
+class UserList(serializers.ModelSerializer):
+    class Meta:
+        model = User
+        fields = '__all__'

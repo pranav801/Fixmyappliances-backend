@@ -4,7 +4,7 @@ from rest_framework.response import Response
 from rest_framework.decorators import api_view
 from rest_framework import status
 from .models import User,Address
-from .serializers import UserRegisterSerializer, GoogleAuthSerializer, MyTokenObtainPairSerializer,AddressSerializer
+from .serializers import UserRegisterSerializer, GoogleAuthSerializer, MyTokenObtainPairSerializer,AddressSerializer, UserList
 from .token import create_jwt_pair_tokens
 from django.contrib.sites.shortcuts import get_current_site
 from django.template.loader import render_to_string
@@ -39,6 +39,7 @@ class UserRegistration(APIView):
             user.save()
 
             current_site = get_current_site(request)
+            print('reg domain is >>>>>>>>>>>>', current_site)
             mail_subject = 'Please activate your account'
             message = render_to_string('user/account_verification.html', {
                 'user': user,
@@ -177,7 +178,16 @@ class AddressFill(CreateAPIView):
     serializer_class = AddressSerializer
 
 class AddressSeclect(ListAPIView):
-    queryset = Address.objects.all()
-    lookup_field = 'user'
-    serializer_class = AddressSerializer
+    def get(self, request, user_id):
+        try:
+            addresses = Address.objects.filter(user_id=user_id)
+            serializer = AddressSerializer(addresses, many=True)
+            return Response(serializer.data, status=status.HTTP_200_OK)
+        except Address.DoesNotExist:
+            return Response("User address not found", status=status.HTTP_404_NOT_FOUND)
     
+
+class UserList(ListAPIView):
+    queryset = User.objects.all()
+    lookup_field = 'id'
+    serializer_class = UserList

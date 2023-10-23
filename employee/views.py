@@ -17,6 +17,7 @@ from .models import Employee
 from rest_framework.permissions import IsAuthenticated
 from django.contrib.auth import authenticate, login
 from rest_framework_simplejwt.tokens import RefreshToken
+from accounts.token import *
 
 class EmployeeRegistrationView(APIView):
     def post(self, request):
@@ -99,14 +100,9 @@ class EmployeeSignIn(APIView):
       
         if user and user.role == 'employee':
             login(request, user)
-
+            employee = Employee.objects.get(employee=user)
             # Generate a JWT token for the user
-            refresh = RefreshToken.for_user(user)
-            data = {
-                'access_token': str(refresh.access_token),
-                'refresh_token': str(refresh)
-            }
-
+            data = create_jwt_pair_tokens(user,employee)
             return Response(data)
         else:
             return Response({'detail': 'Invalid credentials or insufficient permissions'}, status=status.HTTP_401_UNAUTHORIZED)
