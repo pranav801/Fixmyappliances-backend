@@ -26,4 +26,5 @@ class Booking(models.Model):
     service_date = models.DateField(null=True)
     service_time = models.TimeField(null=True)
     is_paid = models.BooleanField(default=False)
+    chat_flag = models.BooleanField(default=False)
     status = models.CharField(max_length=50, default='pending', choices=ROLE_CHOICES)

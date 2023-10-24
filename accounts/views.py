@@ -15,6 +15,9 @@ from django.core.mail import EmailMessage
 from django.shortcuts import HttpResponseRedirect
 from django.contrib.auth import authenticate
 from rest_framework_simplejwt.views import TokenObtainPairView
+from message.serializer import MessageSerializer
+from message.models import Message
+from booking.models import Booking
 
 @api_view(['GET'])
 def get_routes(request):
@@ -187,7 +190,55 @@ class AddressSeclect(ListAPIView):
             return Response("User address not found", status=status.HTTP_404_NOT_FOUND)
     
 
-class UserList(ListAPIView):
+# class UserList(ListAPIView):
+#     queryset = User.objects.all()
+#     lookup_field = 'id'
+#     serializer_class = UserList
+
+class UserDetailView(RetrieveUpdateAPIView):
     queryset = User.objects.all()
-    lookup_field = 'id'
     serializer_class = UserList
+    lookup_field = 'id'
+
+class PreviousMessagesView(ListAPIView):
+    serializer_class = MessageSerializer
+
+    def get_queryset(self):
+        booking_id = self.kwargs['booking_id']
+        thread_name = 'chat_'+str(booking_id)
+        queryset = Message.objects.filter(
+            thread_name=thread_name
+        )
+        return queryset
+
+
+class UserChatListView(APIView):
+    def get(self,request,user_id):
+        bookings = Booking.objects.filter(user__id=user_id).exclude(status='pending')
+        result = []
+        for booking in bookings:
+            result.append({'user':booking.user.first_name,
+                           'employee':booking.employee.employee.first_name,
+                           'id':booking.id,
+                           'chat_flag':booking.chat_flag,
+                           })
+        return Response(data= result)
+
+class EmployeeChatListView(APIView):
+    def get(self,request,employee_id):
+        bookings = Booking.objects.filter(employee__id=employee_id).exclude(status='pending')
+        result = []
+        for booking in bookings:
+            result.append({'employee':booking.employee.employee.first_name,
+                           'user':booking.user.first_name,
+                           'id':booking.id,
+                           'chat_flag':booking.chat_flag,
+                           })
+        return Response(data= result)
+
+class SetChatFlag(APIView):
+    def get(self,request,booking_id):
+        try:
+            return Response(data=Booking.objects.get(id=booking_id).chat_flag)
+        except:
+            return Response(status=400)

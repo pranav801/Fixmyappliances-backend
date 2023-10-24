@@ -12,6 +12,7 @@ urlpatterns = [
     path('booking-list-employee/<int:empid>/', BookingListEmployee.as_view()),
     path('update-booking-status/<int:booking_id>/', BookingStatusUpdate.as_view(), name='update-booking-status'),
     path('update-service-date-time/<int:booking_id>/', UpdateServiceDateAndTime.as_view()),
+    path('admin-booking-list/', AdminBookingList.as_view()),
 ]
 
 

@@ -42,7 +42,7 @@ class User(AbstractBaseUser):
         ('admin', 'admin')
     )
     
-    username=models.CharField(max_length=100,unique=True,null=True)
+    username      = models.CharField(max_length=100,unique=True,null=True)
     email         = models.EmailField(max_length=100, unique=True)
     first_name    = models.CharField(max_length=50)
     last_name     = models.CharField(max_length=50)

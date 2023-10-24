@@ -22,7 +22,14 @@ urlpatterns = [
     path('address/', AddressFill.as_view()),
     path('address/select/<int:user_id>', AddressSeclect.as_view()),
 
-    path('userlist/<int:id>/', UserList.as_view()),
+    # path('userlist/<int:id>/', UserList.as_view()),
+    path("user-previous-chats/<int:booking_id>/", PreviousMessagesView.as_view()),
+    path("user-chat-list/<int:user_id>/", UserChatListView.as_view()),
+    path("employee-chat-list/<int:employee_id>/", EmployeeChatListView.as_view()),
+    path("set-chat-flag/<int:booking_id>/", SetChatFlag.as_view()),
+    
+
+    path('user-profile-detail/<int:id>/', UserDetailView.as_view()),
 
 ]
 
