@@ -40,6 +40,15 @@ class EmployeeSerializer(serializers.ModelSerializer):
         model = Employee
         fields = '__all__'
 
+class EmployeSerializer(serializers.ModelSerializer):
+    employee = UserSerializer()
+    class Meta:
+        model = Employee
+        fields = ['employee']
+
+
+
+
 class EmployeeLoginSerializer(serializers.ModelSerializer):
     class Meta:
         model = User

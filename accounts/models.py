@@ -88,7 +88,7 @@ class User(AbstractBaseUser):
 class Address(models.Model):
     user = models.ForeignKey(User, models.CASCADE)
     fullname = models.CharField(max_length=25)
-    phone = models.PositiveIntegerField()
+    phone = models.PositiveBigIntegerField(null=True)
     pincode = models.PositiveIntegerField()
     house_name = models.CharField(max_length=50)
     street = models.CharField(max_length=50)

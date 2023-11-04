@@ -1,13 +1,13 @@
 import json
-
 from channels.db import database_sync_to_async
 from channels.generic.websocket import AsyncWebsocketConsumer
 from django.contrib.auth import get_user_model
-
 from .serializer import MessageSerializer
 from .models import Message
 from employee.models import Employee
 from booking.models import Booking
+
+
 class ChatConsumer(AsyncWebsocketConsumer):
     async def connect(self):
         booking_id = self.scope["url_route"]["kwargs"]["id"]

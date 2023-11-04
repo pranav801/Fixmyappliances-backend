@@ -136,7 +136,7 @@ ROOT_URLCONF = 'project.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [],
+        'DIRS': ['templates'],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
@@ -151,13 +151,17 @@ TEMPLATES = [
 
 CORS_ORIGIN_ALLOW_ALL = True
 
-CORS_ALLOWED_ORIGINS = [
-    "*"
-]
 
 CORS_ORIGIN_WHITELIST = [
     "*"
 ]
+
+
+CORS_ALLOW_HEADERS = [
+    "Authorization",
+    "Content-Type",
+]
+
 
 WSGI_APPLICATION = 'project.wsgi.application'
 ASGI_APPLICATION = "project.asgi.application"

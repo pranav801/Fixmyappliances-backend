@@ -26,6 +26,7 @@ urlpatterns = [
 
     path('product/products/<str:categoryName>/' ,ProductsByCategory.as_view()),
     path('product/detail/<str:productName>/', ServiceByProduct.as_view()),
+    path('search/', SearchView.as_view(), name='search'),
 ]
 
 

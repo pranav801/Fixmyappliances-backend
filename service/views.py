@@ -1,10 +1,11 @@
 from django.shortcuts import render
-from rest_framework.generics import ListCreateAPIView,CreateAPIView,DestroyAPIView,UpdateAPIView, RetrieveAPIView
+from rest_framework.generics import ListCreateAPIView,CreateAPIView,DestroyAPIView,UpdateAPIView, RetrieveAPIView,ListAPIView
 from rest_framework import viewsets
 from rest_framework.response import Response
 from .serializers import *
 from rest_framework.views import APIView
 from rest_framework import status
+from django.db.models import Q
 
 class CategoryListView(ListCreateAPIView):
     serializer_class = CategorySerializer
@@ -48,7 +49,7 @@ class ProductEditApiView(UpdateAPIView):
     lookup_field='id'
 
 class ServiceListView(ListCreateAPIView):
-    serializer_class = ServiceSerializer
+    serializer_class = ServiceListSerializer
     queryset = Service.objects.all()
 
 
@@ -101,3 +102,18 @@ class ServiceByProduct(APIView):
             return Response(serializer.data)
         except Exception as e:
             return Response({"message": f"Error fetching services by product. {e}"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+class SearchView(ListAPIView):
+    serializer_class = ServiceSerializer
+
+    def get_queryset(self):
+        query = self.request.query_params.get('q')
+        if query:
+                search=Service.objects.filter(
+                Q(service_name__icontains=query) |
+                Q(service_product__product_name__icontains=query) |
+                Q(service_product__product_cat__category_name__icontains=query)
+            )
+                return search
+        else:
+            return []

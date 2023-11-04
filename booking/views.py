@@ -136,7 +136,14 @@ class UserWithEmployeeByBookingId(APIView):
         try:
             booking = Booking.objects.get(id=BookingId)
             user = booking.employee.employee
-            data={'id':user.id,'username':user.first_name,'email':user.email}
+            data={
+                'id':user.id,
+                'username':user.first_name,
+                'email':user.email,
+                'user':booking.user.first_name,
+                'user_email':booking.user.email,
+                'user_id':booking.user.id   ,
+                }
             return Response(data=data)
         except Booking.DoesNotExist:
             return Response({'error': 'Booking not found'}, status=status.HTTP_404_NOT_FOUND)
@@ -180,11 +187,12 @@ class UpdateServiceDateAndTime(APIView):
         service_date = request.data.get('service_date')
         service_time = request.data.get('service_time')
 
-        if service_date is not None:
+        if service_date is not None and service_time is not None:
             booking.service_date = service_date
-
-        if service_time is not None:
             booking.service_time = service_time
+            booking.status = 'confirmed'
+        else:
+            return Response(status=status.HTTP_400_BAD_REQUEST)
 
         booking.save()
 
@@ -196,3 +204,4 @@ class AdminBookingList(ListAPIView):
     queryset = Booking.objects.all()
     serializer_class = BookingsSerializer
     
+

@@ -18,6 +18,7 @@ urlpatterns = [
     path('token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
     path('google_authentication/', GoogleAuthentication.as_view()),
     path('update/<int:id>',UpdateUser.as_view()),
+    path('is-user-auth/<int:id>/', views.IsUserAuth.as_view(), name='user-auth'),
 
     path('address/', AddressFill.as_view()),
     path('address/select/<int:user_id>', AddressSeclect.as_view()),
@@ -30,6 +31,9 @@ urlpatterns = [
     
 
     path('user-profile-detail/<int:id>/', UserDetailView.as_view()),
+    path('users-profile-update/<int:user_id>', UserUpdateView.as_view()),
+    path('update-profile-image/<int:id>', UserProfileImageView.as_view()),
+    path('remove-profile-image/<int:id>', views.RemoveProfileImageView.as_view()),
 
 ]
 

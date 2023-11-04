@@ -4,6 +4,7 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.decorators import api_view
 from accounts.models import User
+from accounts.serializers import UserUpdateSerializer
 from django.contrib.sites.shortcuts import get_current_site
 from django.template.loader import render_to_string
 from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
@@ -11,13 +12,17 @@ from django.utils.encoding import force_bytes
 from django.contrib.auth.tokens import default_token_generator
 from django.core.mail import EmailMessage
 from django.shortcuts import HttpResponseRedirect
-from .serializers import EmployeeRegisterSerializer, ProfileCompletionSerializer, BaseProfileSerializer, EmployeeSerializer,EmployeeLoginSerializer
-from rest_framework.generics import CreateAPIView,UpdateAPIView, ListAPIView
+from .serializers import EmployeeRegisterSerializer, ProfileCompletionSerializer, BaseProfileSerializer, EmployeeSerializer, EmployeeLoginSerializer, EmployeSerializer
+from rest_framework.generics import CreateAPIView, UpdateAPIView, ListAPIView
 from .models import Employee
 from rest_framework.permissions import IsAuthenticated
 from django.contrib.auth import authenticate, login
 from rest_framework_simplejwt.tokens import RefreshToken
 from accounts.token import *
+from django.urls import reverse
+from booking.models import Booking
+from django.db.models import Sum
+
 
 class EmployeeRegistrationView(APIView):
     def post(self, request):
@@ -33,10 +38,9 @@ class EmployeeRegistrationView(APIView):
             user.save()
             Employee.objects.create(employee=user)
 
-
             current_site = get_current_site(request)
             mail_subject = 'Please activate your account'
-            message = render_to_string('user/account_verification.html', {
+            message = render_to_string('employee/employee_verification.html', {
                 'user': user,
                 'domain': current_site,
                 'uid': urlsafe_base64_encode(force_bytes(user.pk)),
@@ -53,7 +57,7 @@ class EmployeeRegistrationView(APIView):
 
 
 @api_view(['GET'])
-def activate(request, uidb64, token):
+def empactivate(request, uidb64, token):
     try:
         uid = urlsafe_base64_decode(uidb64).decode()
         user = User._default_manager.get(pk=uid)
@@ -65,12 +69,17 @@ def activate(request, uidb64, token):
         user.save()
         message = 'Congrats! Account activated!'
         redirect_url = 'http://localhost:5173/employee/form/' + \
-            '?emp=' + str(user.id)
+            '?emp=' + str(user.id) + '&&message=' + message
+
+        # redirect_url = reverse('http://localhost:5173/employee/form/')
+        # redirect_url += f'?emp={user.id}&message={message}'
     else:
         message = 'Invalid activation link'
         redirect_url = 'http://localhost:5173/employee/form/' + \
-            '?emp=' + str(user.id)
+            '?emp=' + str(user.id)+'&&message=' + message
 
+        # redirect_url = reverse('http://localhost:5173/employee/form/')
+        # redirect_url += f'?emp={user.id}&message={message}'
     return HttpResponseRedirect(redirect_url)
 
 
@@ -84,11 +93,23 @@ class ProfileCompletionView(UpdateAPIView):
     lookup_field = 'employee__id'
     queryset = Employee.objects.all()
     serializer_class = ProfileCompletionSerializer
-   
+
+
 class EmployeeDetailView(ListAPIView):
     lookup_field = 'employee__id'
     queryset = Employee.objects.all()
     serializer_class = EmployeeSerializer
+
+
+@api_view(['GET'])
+def employee_detail(request, id):
+    try:
+        emp = Employee.objects.get(employee__id=id)
+    except Employee.DoesNotExist:
+        return Response("Employee not found", status=status.HTTP_404_NOT_FOUND)
+
+    serializer = EmployeeSerializer(emp)
+    return Response(serializer.data)
 
 
 class EmployeeSignIn(APIView):
@@ -97,15 +118,61 @@ class EmployeeSignIn(APIView):
         email = request.data.get('email')
         password = request.data.get('password')
         user = authenticate(request, email=email, password=password)
-      
+
         if user and user.role == 'employee':
             login(request, user)
             employee = Employee.objects.get(employee=user)
             # Generate a JWT token for the user
-            data = create_jwt_pair_tokens(user,employee)
+            data = create_jwt_pair_tokens(user, employee)
             return Response(data)
         else:
             return Response({'detail': 'Invalid credentials or insufficient permissions'}, status=status.HTTP_401_UNAUTHORIZED)
-        
 
-        
+
+class EmployeeUpdateProfile(RetrieveUpdateAPIView):
+    queryset = User.objects.all()
+    serializer_class = UserUpdateSerializer
+    lookup_field = 'id'
+
+
+@api_view(['PATCH'])
+def EmployeeUpdate(request, employee__id):
+    try:
+        emp = Employee.objects.get(employee__id=employee__id)
+    except Employee.DoesNotExist:
+        return Response("Employee not found", status=status.HTTP_404_NOT_FOUND)
+
+    if request.method == 'PATCH':
+        serializer = EmployeSerializer(emp, data=request.data, partial=True)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+class EmployeeDashboardView(APIView):
+    def get(self, request, employee_id, format=None):
+        pending_booking = Booking.objects.filter(
+            employee__id=employee_id, status='pending').count()
+        completed_work = Booking.objects.filter(
+            employee__id=employee_id, status='completed').count()
+        confirmed_works = Booking.objects.filter(
+            employee__id=employee_id, status='confirmed').count()
+        total_work_charge = Booking.objects.filter(employee__id=employee_id, status='completed').aggregate(
+            total_booking_amount=Sum('booking_amount'))['total_booking_amount']
+        if not total_work_charge:
+            total_work_charge = 0
+        commission = 0
+        if total_work_charge > 10000:
+            amount = total_work_charge - 10000
+            commission = amount * 0.05
+
+        data = {
+            'pending_booking': pending_booking,
+            'completed_work': completed_work,
+            'confirmed_works': confirmed_works,
+            'total_work_charge' : total_work_charge,
+            'commission': commission,
+        }
+
+        return Response(data)

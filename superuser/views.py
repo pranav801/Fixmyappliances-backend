@@ -13,6 +13,12 @@ from rest_framework.filters import SearchFilter
 from rest_framework.decorators import api_view,action
 from .utils import send_employee_status_email
 from .helpers import generate_random_password
+from booking.models import ReviewRating,Complaints,Booking
+from service.models import Products, Service
+from django.db.models import Count, Q, Sum, Avg, ExpressionWrapper, FloatField
+from django.db.models.functions import Round
+
+
 
 class AdminLogin(APIView): 
     def post(self, request):
@@ -38,6 +44,16 @@ class AdminLogin(APIView):
 
             response = {'message': 'Invalid login credentials'}
             return Response(data=response, status=status.HTTP_400_BAD_REQUEST)
+
+
+class IsAdminAuth(APIView):
+    def get(self, request, id):
+        try:
+            superadmin = User.objects.get(
+                id=id, is_active=True, role='admin')
+            return Response(data={'success': True}, status=status.HTTP_200_OK)
+        except User.DoesNotExist:
+            return Response(data={'failure': False}, status=status.HTTP_404_NOT_FOUND)
 
 
 class ListUsers(ListAPIView):
@@ -103,3 +119,38 @@ class AdminSearchEmployeeReq(ListCreateAPIView):
     filter_backends = [SearchFilter]
     queryset = Employee.objects.all()
     search_fields = ['employee__first_name','employee__last_name','employee__email','employee__phone','category__category_name','pincode']
+
+
+
+class DashboardView(APIView):
+    def get(self, request, format=None):
+        users_count = User.objects.filter(role='user').count()
+        employee_count = Employee.objects.filter(isVerified=True).count()
+        employee_request_count = Employee.objects.filter(isRequested=True).count()
+        complaints_pending = Complaints.objects.filter(status='pending').count()
+        rating = rating = ReviewRating.objects.aggregate(avg_rating=ExpressionWrapper(Round(Avg('rating'), 2), output_field=FloatField()))
+
+        products_count = Products.objects.all().count()
+        service_count = Service.objects.all().count()
+        booking_count = Booking.objects.aggregate(
+                        pending_count=Count('id', filter=Q(status='pending')),
+                        confirmed_count=Count('id', filter=Q(status='confirmed'))
+                        )
+        completed_work = Booking.objects.filter(status='completed').count()
+        total_income = Booking.objects.aggregate(total_booking_amount=Sum('booking_amount'))
+        
+        data = {
+            'users': users_count,
+            'employee_count': employee_count,
+            'employee_request_count': employee_request_count,
+            'complaints_pending': complaints_pending,
+            'rating': rating,
+
+            'products_count': products_count,
+            'service_count' : service_count,
+            'booking_count' : booking_count['pending_count']+booking_count['confirmed_count'],
+            'completed_work' : completed_work,
+            'total_income' : total_income,
+        }
+
+        return Response(data)

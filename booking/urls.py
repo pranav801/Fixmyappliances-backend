@@ -1,5 +1,7 @@
 from django.urls import path
 from .views import *
+from .views_review import *
+from .views_complaints import *
 
 urlpatterns = [
     path('employees/available/<int:user_id>/', EmployeeListing, name='employee-list-api'),
@@ -13,6 +15,15 @@ urlpatterns = [
     path('update-booking-status/<int:booking_id>/', BookingStatusUpdate.as_view(), name='update-booking-status'),
     path('update-service-date-time/<int:booking_id>/', UpdateServiceDateAndTime.as_view()),
     path('admin-booking-list/', AdminBookingList.as_view()),
+
+    path('add-review/', AddReview.as_view()),
+    path('list-review-product/<int:productId>/', ListReviewsForProduct.as_view()),
+    path('review-list-admin/', ReviewListForAdmin.as_view()),
+    path('review-delete/<int:pk>/', ReviewDeleteForAdmin.as_view()),
+
+    path('register-complaint/', ComplaintsRegisterView.as_view()),
+    path('complaint-list-admin/',ComplaintsListView.as_view()),
+    path('update-complaint-status/<uuid:BookingId>/',ComplaintStatusUpdate.as_view()),
 ]
 
 

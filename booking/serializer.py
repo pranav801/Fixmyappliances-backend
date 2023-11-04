@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import Booking
+from .models import Booking,ReviewRating,Complaints
 from employee.serializers import EmployeeSerializer
 from accounts.serializers import UserList,AddressSerializer
 from service.serializers import ProductSerializer,ServiceSerializer
@@ -24,3 +24,30 @@ class BookingsSerializer(serializers.ModelSerializer):
     class Meta:
         model = Booking
         fields = '__all__'
+
+
+class ReviewRatingSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ReviewRating
+        fields = '__all__'
+
+class ReviewListingSerializer(serializers.ModelSerializer):
+    user = UserList()
+    product = ProductSerializer()
+    class Meta:
+        model = ReviewRating
+        fields = '__all__'
+
+
+
+class ComplaintsSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Complaints
+        fields = '__all__'
+
+class ComplaintListSerializer(serializers.ModelSerializer):
+    user = UserList()
+    class Meta:
+        model = Complaints
+        fields = '__all__'
+        

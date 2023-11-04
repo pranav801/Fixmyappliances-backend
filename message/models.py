@@ -2,7 +2,7 @@ from django.db import models
 from accounts.models import User
 from employee.models import Employee
 from booking.models import Booking
-# Create your models here.
+
 
 class Message(models.Model):
     user = models.ForeignKey(User,null=True,on_delete=models.CASCADE)
@@ -14,3 +14,4 @@ class Message(models.Model):
 
     def __str__(self) -> str:
         return f'({self.thread_name})'
+    

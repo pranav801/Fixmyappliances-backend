@@ -1,10 +1,10 @@
 from rest_framework.views import APIView
-from rest_framework.generics import CreateAPIView,ListAPIView
+from rest_framework.generics import CreateAPIView,ListAPIView,RetrieveUpdateDestroyAPIView,DestroyAPIView
 from rest_framework.response import Response
 from rest_framework.decorators import api_view
 from rest_framework import status
 from .models import User,Address
-from .serializers import UserRegisterSerializer, GoogleAuthSerializer, MyTokenObtainPairSerializer,AddressSerializer, UserList
+from .serializers import *
 from .token import create_jwt_pair_tokens
 from django.contrib.sites.shortcuts import get_current_site
 from django.template.loader import render_to_string
@@ -18,6 +18,8 @@ from rest_framework_simplejwt.views import TokenObtainPairView
 from message.serializer import MessageSerializer
 from message.models import Message
 from booking.models import Booking
+from rest_framework.generics import RetrieveUpdateAPIView
+
 
 @api_view(['GET'])
 def get_routes(request):
@@ -26,8 +28,6 @@ def get_routes(request):
         '/token/refresh',
     ]
     return Response(routes)
-
-
 
 class UserRegistration(APIView):
     def post(self, request):
@@ -42,7 +42,6 @@ class UserRegistration(APIView):
             user.save()
 
             current_site = get_current_site(request)
-            print('reg domain is >>>>>>>>>>>>', current_site)
             mail_subject = 'Please activate your account'
             message = render_to_string('user/account_verification.html', {
                 'user': user,
@@ -73,6 +72,7 @@ def activate(request, uidb64, token):
         user.save()
         message = 'Congrats! Account activated!'
         redirect_url = 'http://localhost:5173/login/' + '?message=' + message
+        
     else:
         message = 'Invalid activation link'
         redirect_url = 'http://localhost:5173/login/' + '?message=' + message
@@ -167,8 +167,17 @@ class ResetPassword(APIView):
             return Response({'msg': 'Password reset succesfully'})
 
         return HttpResponseRedirect('http://localhost:5173/login/')
+    
 
-from rest_framework.generics import RetrieveUpdateAPIView
+
+class IsUserAuth(APIView):
+    def get(self, request, id):
+        try:
+            user = User.objects.get(id=id, is_active=True)
+            return Response(data={'success': True}, status=status.HTTP_200_OK)
+        except User.DoesNotExist:
+            return Response(data={'failure': False}, status=status.HTTP_401_UNAUTHORIZED)
+
 
 class UpdateUser(RetrieveUpdateAPIView):
     queryset = User.objects.all()
@@ -190,15 +199,44 @@ class AddressSeclect(ListAPIView):
             return Response("User address not found", status=status.HTTP_404_NOT_FOUND)
     
 
-# class UserList(ListAPIView):
-#     queryset = User.objects.all()
-#     lookup_field = 'id'
-#     serializer_class = UserList
-
 class UserDetailView(RetrieveUpdateAPIView):
     queryset = User.objects.all()
     serializer_class = UserList
     lookup_field = 'id'
+
+
+class UserUpdateView(APIView):
+    def patch(self, request, user_id):
+        try:
+            user = User.objects.get(pk=user_id)
+        except User.DoesNotExist:
+            return Response({"detail": "User not found."}, status=status.HTTP_404_NOT_FOUND)
+
+        data = request.data  
+        fields_to_update = {}
+
+        for field in data:
+            if field in ['first_name', 'last_name', 'phone']:
+                fields_to_update[field] = data[field]
+
+        serializer = UserUpdateSerializer(user, data=fields_to_update, partial=True)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+class UserProfileImageView(RetrieveUpdateDestroyAPIView):
+    queryset = User.objects.all()
+    serializer_class = UserProfileImageUpdateSerializer
+    lookup_field = 'id'
+
+
+class RemoveProfileImageView(DestroyAPIView):
+    queryset = User.objects.all()
+    serializer_class = UserProfileImageUpdateSerializer
+    lookup_field='id'
+
 
 class PreviousMessagesView(ListAPIView):
     serializer_class = MessageSerializer
@@ -220,6 +258,7 @@ class UserChatListView(APIView):
             result.append({'user':booking.user.first_name,
                            'employee':booking.employee.employee.first_name,
                            'id':booking.id,
+                           'service':booking.booked_service.service_name,
                            'chat_flag':booking.chat_flag,
                            })
         return Response(data= result)
@@ -230,8 +269,10 @@ class EmployeeChatListView(APIView):
         result = []
         for booking in bookings:
             result.append({'employee':booking.employee.employee.first_name,
+                           'user_id':booking.user.id,
                            'user':booking.user.first_name,
                            'id':booking.id,
+                           'service':booking.booked_service.service_name,
                            'chat_flag':booking.chat_flag,
                            })
         return Response(data= result)
@@ -242,3 +283,4 @@ class SetChatFlag(APIView):
             return Response(data=Booking.objects.get(id=booking_id).chat_flag)
         except:
             return Response(status=400)
+        
