@@ -19,7 +19,7 @@ from message.serializer import MessageSerializer
 from message.models import Message
 from booking.models import Booking
 from rest_framework.generics import RetrieveUpdateAPIView
-
+from django.conf import settings
 
 @api_view(['GET'])
 def get_routes(request):
@@ -71,11 +71,11 @@ def activate(request, uidb64, token):
         user.is_active = True
         user.save()
         message = 'Congrats! Account activated!'
-        redirect_url = 'http://localhost:5173/login/' + '?message=' + message
+        redirect_url = f'{settings.SITE_URL}/login/' + '?message=' + message
         
     else:
         message = 'Invalid activation link'
-        redirect_url = 'http://localhost:5173/login/' + '?message=' + message
+        redirect_url = f'{settings.SITE_URL}/login/' + '?message=' + message
 
     return HttpResponseRedirect(redirect_url)
 
@@ -150,7 +150,7 @@ def reset_validate(request, uidb64, token):
 
     if user is not None and default_token_generator.check_token(user, token):
        
-        return HttpResponseRedirect(f'http://localhost:5173/reset-password/')
+        return HttpResponseRedirect(f'{settings.SITE_URL}/reset-password/')
 
 
 class ResetPassword(APIView):
@@ -166,7 +166,7 @@ class ResetPassword(APIView):
 
             return Response({'msg': 'Password reset succesfully'})
 
-        return HttpResponseRedirect('http://localhost:5173/login/')
+        return HttpResponseRedirect(f'{settings.SITE_URL}/login/')
     
 
 
@@ -284,3 +284,22 @@ class SetChatFlag(APIView):
         except:
             return Response(status=400)
         
+
+
+class EmployeeResetPassword(APIView):
+    def post(self, request, format=None):
+        emp_id = request.data.get('employee')
+        
+    def post(self, request, format=None):
+        str_user_id = request.data.get('user_id')
+        uid = int(str_user_id)
+        password = request.data.get('password')
+
+        if uid:
+            user = User.objects.get(id=uid)
+            user.set_password(password)
+            user.save()
+
+            return Response({'msg': 'Password reset succesfully'})
+
+        return HttpResponseRedirect(f'{settings.SITE_URL}/login/')

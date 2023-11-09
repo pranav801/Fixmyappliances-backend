@@ -14,6 +14,7 @@ class Employee(models.Model):
     pincode = models.IntegerField(null=True)
     isVerified = models.BooleanField(default=False)
     isRequested = models.BooleanField(default=False)
+    isChangePassword = models.BooleanField(default=False)
 
 from django.dispatch import Signal
 

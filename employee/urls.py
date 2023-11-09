@@ -11,6 +11,7 @@ urlpatterns = [
     path('login/', EmployeeSignIn.as_view()),
     path('profile-update/<int:id>/', EmployeeUpdateProfile.as_view()),
     path('profile-edit/<int:employee__id>', EmployeeUpdate),
-
+    path('password-check/<int:userid>',PasswordChangeCheck.as_view()),
+    path('password-change/',EmployeePasswordChange.as_view()),
     path('employee-dashboard/<int:employee_id>/', EmployeeDashboardView.as_view()),
 ]

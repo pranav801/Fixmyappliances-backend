@@ -12,7 +12,7 @@ from django.utils.encoding import force_bytes
 from django.contrib.auth.tokens import default_token_generator
 from django.core.mail import EmailMessage
 from django.shortcuts import HttpResponseRedirect
-from .serializers import EmployeeRegisterSerializer, ProfileCompletionSerializer, BaseProfileSerializer, EmployeeSerializer, EmployeeLoginSerializer, EmployeSerializer
+from .serializers import *
 from rest_framework.generics import CreateAPIView, UpdateAPIView, ListAPIView
 from .models import Employee
 from rest_framework.permissions import IsAuthenticated
@@ -22,8 +22,8 @@ from accounts.token import *
 from django.urls import reverse
 from booking.models import Booking
 from django.db.models import Sum
-
-
+from django.contrib.auth import authenticate
+from django.conf import settings
 class EmployeeRegistrationView(APIView):
     def post(self, request):
         email = request.data.get('email')
@@ -68,18 +68,16 @@ def empactivate(request, uidb64, token):
         user.is_active = True
         user.save()
         message = 'Congrats! Account activated!'
-        redirect_url = 'http://localhost:5173/employee/form/' + \
+        redirect_url = f'{settings.SITE_URL}/employee/form/' + \
             '?emp=' + str(user.id) + '&&message=' + message
 
-        # redirect_url = reverse('http://localhost:5173/employee/form/')
-        # redirect_url += f'?emp={user.id}&message={message}'
+    
     else:
         message = 'Invalid activation link'
-        redirect_url = 'http://localhost:5173/employee/form/' + \
+        redirect_url = f'{settings.SITE_URL}/employee/form/' + \
             '?emp=' + str(user.id)+'&&message=' + message
 
-        # redirect_url = reverse('http://localhost:5173/employee/form/')
-        # redirect_url += f'?emp={user.id}&message={message}'
+
     return HttpResponseRedirect(redirect_url)
 
 
@@ -129,10 +127,55 @@ class EmployeeSignIn(APIView):
             return Response({'detail': 'Invalid credentials or insufficient permissions'}, status=status.HTTP_401_UNAUTHORIZED)
 
 
+
+class EmployeePasswordChange(APIView):
+    def post(self,request):
+        userid = request.data.get('userid')
+        old_password = request.data.get('current_password')
+
+        try:
+            user = User.objects.get(id=userid)
+        except User.DoesNotExist:
+            return Response({'msg': 'User not found'}, status=status.HTTP_404_NOT_FOUND)
+        if user and user.check_password(old_password):
+            return Response(data={'message': 'Password reset succesfully'}, status=status.HTTP_200_OK)
+       
+        else:
+            return Response({'msg':'enter valid password'},status=status.HTTP_406_NOT_ACCEPTABLE)
+        
+    def patch(self, request, format=None):
+        userid = request.data.get('userid')
+        password = request.data.get('password')
+
+        if userid:
+            user = User.objects.get(id=userid)
+            user.set_password(password)
+            user.save()
+            emp = Employee.objects.get(employee=userid)
+            print(emp)
+            emp.isChangePassword = True
+            emp.save()
+            return Response({'msg': 'Password reset succesfully'},status=status.HTTP_202_ACCEPTED)
+
+
+class PasswordChangeCheck(APIView):
+    def get(self,request,userid):
+        try:
+            emp = Employee.objects.get(id=userid)
+        except Employee.DoesNotExist:
+            return Response("Employee not found", status=status.HTTP_404_NOT_FOUND)
+
+        serializer = passwordChangeCheckSerializer(emp)
+
+        return Response(serializer.data)
+        
+        
+
 class EmployeeUpdateProfile(RetrieveUpdateAPIView):
     queryset = User.objects.all()
     serializer_class = UserUpdateSerializer
     lookup_field = 'id'
+
 
 
 @api_view(['PATCH'])

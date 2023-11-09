@@ -18,6 +18,5 @@ def send_status_update_email(sender, instance, created, **kwargs):
             instance.user.first_name,
             instance.booking_id,
             instance.status,
-
         )
       

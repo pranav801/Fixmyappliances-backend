@@ -54,3 +54,7 @@ class EmployeeLoginSerializer(serializers.ModelSerializer):
         model = User
         fields = ('email', 'password')
 
+class passwordChangeCheckSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Employee
+        fields = ['isChangePassword','employee']
