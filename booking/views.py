@@ -85,8 +85,8 @@ class BookingCreateView(APIView):
                     }],
                     payment_method_types = ['card',],
                     mode='payment',
-                    success_url= settings.SITE_URL + 'service/payment/?booking=' + str(booking_id),
-                    cancel_url= settings.SITE_URL + '?canceled=true',
+                    success_url= settings.SITE_URL + '/service/payment/?booking=' + str(booking_id),
+                    cancel_url= settings.SITE_URL + '/?canceled=true',
                 )
 
                 return Response(data=checkout_session.url, status=status.HTTP_201_CREATED)
