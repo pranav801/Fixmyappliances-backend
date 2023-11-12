@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import Booking,ReviewRating,Complaints
+from .models import Booking,ReviewRating,Complaints, Feedback
 from employee.serializers import EmployeeSerializer
 from accounts.serializers import UserList,AddressSerializer
 from service.serializers import ProductSerializer,ServiceSerializer
@@ -51,3 +51,15 @@ class ComplaintListSerializer(serializers.ModelSerializer):
         model = Complaints
         fields = '__all__'
         
+
+class FeedbackSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Feedback
+        fields = '__all__'
+
+class FeedbackListSerializer(serializers.ModelSerializer):
+    user = UserList()
+    booking = BookingsSerializer()
+    class Meta:
+        model = Feedback
+        fields = '__all__'

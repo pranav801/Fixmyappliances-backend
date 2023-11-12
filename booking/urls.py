@@ -2,6 +2,7 @@ from django.urls import path
 from .views import *
 from .views_review import *
 from .views_complaints import *
+from .views_feedback import *
 
 urlpatterns = [
     path('employees/available/<int:user_id>/', EmployeeListing, name='employee-list-api'),
@@ -24,6 +25,9 @@ urlpatterns = [
     path('register-complaint/', ComplaintsRegisterView.as_view()),
     path('complaint-list-admin/',ComplaintsListView.as_view()),
     path('update-complaint-status/<uuid:BookingId>/',ComplaintStatusUpdate.as_view()),
+
+    path('add-feedback/', FeedbackAddingView.as_view() ),
+    path('list-feedback/<int:employee>/', FeedbackListView.as_view()),
 ]
 
 

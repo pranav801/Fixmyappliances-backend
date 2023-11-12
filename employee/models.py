@@ -2,6 +2,8 @@ from django.db import models
 from accounts.models import User
 from service.models import Category,Products
 
+from django.db.models import Avg
+
 from django.db.models.signals import post_save
 from django.dispatch import receiver
 from superuser.utils import send_employee_status_email
@@ -15,6 +17,7 @@ class Employee(models.Model):
     isVerified = models.BooleanField(default=False)
     isRequested = models.BooleanField(default=False)
     isChangePassword = models.BooleanField(default=False)
+    rating = models.IntegerField(default=0)
 
 from django.dispatch import Signal
 
@@ -34,3 +37,5 @@ def employy_request(sender, instance, created, temp_password, **kwargs):
             instance.isVerified,
             temp_password,
         )
+
+
