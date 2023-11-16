@@ -68,13 +68,13 @@ def empactivate(request, uidb64, token):
         user.is_active = True
         user.save()
         message = 'Congrats! Account activated!'
-        redirect_url = f'{settings.SITE_URL}/employee/form/' + \
+        redirect_url = f'{settings.SITE_URL}employee/form/' + \
             '?emp=' + str(user.id) + '&&message=' + message
 
     
     else:
         message = 'Invalid activation link'
-        redirect_url = f'{settings.SITE_URL}/employee/form/' + \
+        redirect_url = f'{settings.SITE_URL}employee/form/' + \
             '?emp=' + str(user.id)+'&&message=' + message
 
 
