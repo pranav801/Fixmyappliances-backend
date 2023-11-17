@@ -7,7 +7,7 @@ from rest_framework import status
 from accounts.token import create_jwt_pair_tokens
 from accounts.models import User
 from employee.models import Employee,employee_request_signal
-from .serializers import UserSerializer
+from .serializers import UserSerializer, RevenueSerializer
 from employee.serializers import EmployeeSerializer
 from rest_framework.filters import SearchFilter
 from rest_framework.decorators import api_view,action
@@ -155,3 +155,15 @@ class DashboardView(APIView):
 
         return Response(data)
     
+
+class RevenueListView(ListAPIView):
+    serializer_class = RevenueSerializer
+    def get_queryset(self):
+        month = self.request.query_params.get('month', None)
+
+        queryset = Booking.objects.filter(is_paid=True)
+
+        if month:
+            queryset = queryset.filter(date_of_booking__month=month)
+
+        return queryset

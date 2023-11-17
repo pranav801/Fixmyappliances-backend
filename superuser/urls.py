@@ -15,5 +15,5 @@ urlpatterns = [
     path('employeeRequest/<int:pk>/reject/', views.EmployeeRequestList.as_view(), {'action': 'reject'}, name='employee-reject'),
 
     path('dashboard/', views.DashboardView.as_view()),
-
+    path('revenue-list/', views.RevenueListView.as_view()),
 ]
